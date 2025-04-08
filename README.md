@@ -1,0 +1,146 @@
+#include <stdio.h>
+#include <limits.h>
+#include <ctype.h>
+
+#define num_vertex 6
+
+int main() {
+    int visivertices[num_vertex], vertexseq[num_vertex];
+    char vertex[] = {'A', 'B', 'C', 'D', 'E', 'F'};
+    int graph[6][6] = {
+        {0, 3, 2, 5, 0, 0},
+        {3, 0, 0, 1, 4, 0},
+        {2, 0, 0, 2, 0, 1},
+        {5, 1, 2, 0, 3, 0},
+        {0, 4, 0, 3, 0, 2},
+        {0, 0, 1, 0, 2, 0}
+    };
+
+    int dijcomp[num_vertex][num_vertex];
+    for (int i = 0; i < num_vertex; i++) {
+        visivertices[i] = 0;
+        for (int j = 0; j < num_vertex; j++) {
+            dijcomp[i][j] = INT_MAX;
+        }
+    }
+
+    char source = 'A';
+    int row = -1;
+
+    for (int i = 0; i < num_vertex; i++) {
+        if (vertex[i] == source) {
+            row = i;
+            break;
+        }
+    }
+
+    dijcomp[row][row] = 0;
+    int seq = 1;
+
+    fr (int z = 0; z < num_vertex; z++) {
+        int min = INT_MAX, col = -1;
+
+        for (int j = 0; j < num_vertex; j++) {
+            dijcomp[z + 1][j] = dijcomp[z][j];
+            if (!visivertices[j] && dijcomp[z][j] < min) {
+                min = dijcomp[z][j];
+                col = j;
+            }
+        }
+
+        visivertices[col] = seq++;
+        vertexseq[z] = vertex[col];
+        printf("Vertex to be Visited: %c\n", vertexseq[z]);
+
+        for (int i = 0; i < num_vertex; i++) {
+            if (graph[col][i] != 0 && !visivertices[i]) {
+                int relaxed_value = dijcomp[z][col] + graph[col][i];
+                if (relaxed_value <= dijcomp[z][i]) {
+                    dijcomp[z + 1][i] = relaxed_value;
+                }
+            }
+            else if (visivertices[i]) {
+                dijcomp[z + 1][i] = INT_MAX;
+            }
+        }
+    }
+
+    printf("\n    ");
+
+    for (int i = 0; i < num_vertex; i++) {
+        printf("%c ", vertex[i]);
+    }
+    printf("\n");
+
+    for (int i = 0; i < num_vertex; i++) {
+        printf("%c | ", vertexseq[i]);
+        for (int j = 0; j < num_vertex; j++) {
+            if (dijcomp[i][j] == INT_MAX)
+                printf("I ");
+            else
+                printf("%d ", dijcomp[i][j]);
+        }
+        printf("\n");
+    }
+
+    char destination;
+    printf("\nEnter Your Destination: ");
+    scanf(" %c", &destination);
+    int pick = -1, sum = 0;
+
+    for (int i = 0; i < num_vertex; i++) {
+        if (vertexseq[i] == toupper(destination)) {
+            pick = i;
+            break;
+        }
+    }
+    if (pick == -1) {
+        printf("Vertex not available.");
+    }
+    else {
+        printf("Vertex[%c] is in %dth row.\n", vertexseq[pick], pick);
+
+        char vert[num_vertex];
+        int col = pick, k = 0, min = INT_MAX, prev_min = -1, prev_col = -1;
+
+        for (int i = 0; i < num_vertex; i++) {
+            if (dijcomp[pick][i] < min) {
+                min = dijcomp[pick][i];
+                col = i;
+            }
+        }
+        prev_col = col;
+        prev_min = min;
+        sum += min;
+
+        vert[k++] = vertexseq[pick];
+
+        while (pick > 0) {
+            if (prev_min != dijcomp[--pick][prev_col]) {
+                vert[k++] = vertexseq[pick];
+                for (int i = 0; i < num_vertex; i++) {
+                    if (dijcomp[pick][i] < min) {
+                        min = dijcomp[pick][i];
+                        col = i;
+                    }
+                }
+                prev_col = col;
+                prev_min = min;
+                sum += min;
+            }
+        }
+        printf("\n Path: ");
+
+        for (int i = k - 1; i >= 0; i--) {
+            printf("%c", vert[i]);
+            if (i > 0) {
+                printf("->");
+            }
+
+        }
+        printf("\n Cost is %d.", sum);
+    }
+
+    printf("\n\n");
+    return 0;
+}
